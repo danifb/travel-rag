@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: travel-rag
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ragdb
+    username: rag
+    password: rag
+
+openai:
+  apiKey: ${OPENAI_API_KEY:}
