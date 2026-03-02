@@ -17,4 +17,10 @@ public class OpenAiSmokeTestController {
     public String test() throws Exception {
         return client.smokeTest();
     }
+
+    @GetMapping("/test-embedding")
+    public String testEmbedding() throws Exception {
+        var vec = client.embed("hello embedding test");
+        return "Vector size: " + vec.size();
+    }
 }
