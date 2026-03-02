@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  postgres:
+    image: ankane/pgvector
+    container_name: travel-rag-db
+    environment:
+      POSTGRES_DB: travelrag
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
