@@ -35,7 +35,7 @@ public class EmbeddingStorageController {
         List<Double> vec = openAi.embed(text);
 
         String vectorLiteral = toPgVectorLiteral(vec);
-        chunks.insert(chunkId, docId, text, vectorLiteral);
+        chunks.insert(chunkId, docId, text, 0, vectorLiteral);
 
         return "Stored chunk=" + chunkId + " doc=" + docId + " vecSize=" + vec.size();
     }

@@ -5,6 +5,11 @@ spring:
     url: jdbc:postgresql://localhost:5432/travelrag
     username: postgres
     password: postgres
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:db/init.sql
 
 openai:
   apiKey: ${OPENAI_API_KEY:}

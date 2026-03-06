@@ -24,19 +24,20 @@ public class OpenAiClient {
 
     private void ensureApiKey() {
         if (props.getApiKey() == null || props.getApiKey().isBlank()) {
-            throw new IllegalStateException("OPENAI_API_KEY is missing. Set it as an environment variable.");
+            throw new IllegalStateException(
+                    "OPENAI_API_KEY is missing. Set it as an environment variable."
+            );
         }
     }
 
     public String smokeTest() throws Exception {
         ensureApiKey();
-
         String body = """
-        {
-          "model": "gpt-4o-mini",
-          "input": "Reply with: OpenAI smoke test OK"
-        }
-        """;
+                {
+                    "model": "gpt-4o-mini",
+                    "input": "Reply with: OpenAI smoke test OK"
+                }
+                """;
 
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/responses"))
@@ -52,7 +53,6 @@ public class OpenAiClient {
     public List<Double> embed(String text) throws Exception {
         ensureApiKey();
 
-        // Simple JSON escaping for quotes/backslashes/newlines
         String safe = text
                 .replace("\\", "\\\\")
                 .replace("\"", "\\\"")
@@ -60,11 +60,11 @@ public class OpenAiClient {
                 .replace("\r", "\\r");
 
         String body = """
-        {
-          "model": "text-embedding-3-small",
-          "input": "%s"
-        }
-        """.formatted(safe);
+                {
+                    "model": "text-embedding-3-small",
+                    "input": "%s"
+                }
+                """.formatted(safe);
 
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create("https://api.openai.com/v1/embeddings"))
@@ -76,19 +76,67 @@ public class OpenAiClient {
         HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
 
         if (res.statusCode() / 100 != 2) {
-            throw new IllegalStateException("Embeddings call failed. HTTP " + res.statusCode() + "\n" + res.body());
+            throw new IllegalStateException(
+                    "Embeddings call failed. HTTP " + res.statusCode() + "\n" + res.body()
+            );
         }
 
         return parseFirstEmbedding(res.body());
+    }
+
+    public String chat(String prompt) throws Exception {
+        ensureApiKey();
+
+        String safe = prompt
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
+
+        String body = """
+                {
+                    "model": "gpt-4o-mini",
+                    "input": "%s"
+                }
+                """.formatted(safe);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.openai.com/v1/responses"))
+                .header("Authorization", "Bearer " + props.getApiKey())
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+
+        if (res.statusCode() / 100 != 2) {
+            throw new IllegalStateException(
+                    "Chat call failed. HTTP " + res.statusCode() + "\n" + res.body()
+            );
+        }
+
+        return extractResponseText(res.body());
+    }
+
+    private String extractResponseText(String json) {
+        Pattern p = Pattern.compile("\"text\"\\s*:\\s*\"(.*?)\"", Pattern.DOTALL);
+        Matcher m = p.matcher(json);
+        if (m.find()) {
+            return m.group(1)
+                    .replace("\\n", "\n")
+                    .replace("\\\"", "\"");
+        }
+        return json;
     }
 
     private static List<Double> parseFirstEmbedding(String json) {
         Pattern p = Pattern.compile("\"embedding\"\\s*:\\s*\\[(.*?)]", Pattern.DOTALL);
         Matcher m = p.matcher(json);
         if (!m.find()) {
-            throw new IllegalStateException("Could not find embedding array in response JSON.");
+            throw new IllegalStateException(
+                    "Could not find embedding array in response JSON."
+            );
         }
-
         String inside = m.group(1).trim();
         if (inside.isEmpty()) return List.of();
 

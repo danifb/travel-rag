@@ -7,6 +7,7 @@ import java.util.UUID;
 
 @Repository
 public class DocumentRepository {
+
     private final JdbcTemplate jdbc;
 
     public DocumentRepository(JdbcTemplate jdbc) {
