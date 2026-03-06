@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS chunks (
      embedding vector(1536) NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS chunks_embedding_idx
-    ON chunks USING ivfflat (embedding vector_cosine_ops)
-    WITH (lists = 100);
+--CREATE INDEX IF NOT EXISTS chunks_embedding_idx
+--    ON chunks USING ivfflat (embedding vector_cosine_ops)
+--    WITH (lists = 100);

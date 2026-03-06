@@ -26,18 +26,26 @@ public class ChunkRepository {
     }
 
     public List<String> findSimilarChunks(String queryEmbeddingLiteral, int topK) {
-        String sql = """
-                SELECT content
-                FROM chunks
-                ORDER BY embedding <=> ?::vector
-                LIMIT ?
-                """;
 
-        return jdbc.query(
+        System.out.println("Searching similar chunks...");
+        System.out.println("Vector length: " + queryEmbeddingLiteral.length());
+
+        // ⬅️ Interpolamos el vector directamente en el SQL
+        // en lugar de pasarlo como parámetro ?
+        // porque el driver JDBC no maneja bien el cast a vector
+        String sql = String.format("""
+            SELECT content
+            FROM chunks
+            ORDER BY embedding <=> '%s'::vector
+            LIMIT %d
+            """, queryEmbeddingLiteral, topK);
+
+        List<String> results = jdbc.query(
                 sql,
-                (rs, rowNum) -> rs.getString("content"),
-                queryEmbeddingLiteral,
-                topK
+                (rs, rowNum) -> rs.getString("content")
         );
+
+        System.out.println("Results found: " + results.size());
+        return results;
     }
 }
