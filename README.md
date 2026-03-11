@@ -175,11 +175,12 @@ curl -X POST http://localhost:8080/api/rag/ask \
   <li>Resolved SQL errors from schema mismatches</li>
   <li>Implemented safe pgvector casting</li>
   <li>Added global + document-scoped retrieval</li>
+  <li>Diagnosed and fixed vector index instability caused by insufficient data for IVFFLAT (lists = 100)</li>
 </ul>
 </div>
 
 <div class="section">
-<h2>Why This Project Matters</h2>
+<h2>Why I created This Project</h2>
 <ul>
   <li>Demonstrates real-world LLM backend integration</li>
   <li>Uses proper vector search instead of naive prompting</li>
