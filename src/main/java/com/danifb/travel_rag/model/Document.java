@@ -3,9 +3,9 @@ package com.danifb.travel_rag.model;
 import java.util.UUID;
 
 public class Document {
-    private UUID id;
-    private String name;
-    private String content;
+    private final UUID id;
+    private final String name;
+    private final String content;
 
     public Document(UUID id, String name, String content) {
         this.id = id;

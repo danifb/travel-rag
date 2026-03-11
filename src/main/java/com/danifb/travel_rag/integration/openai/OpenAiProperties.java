@@ -1,4 +1,4 @@
-package com.danifb.travel_rag.config;
+package com.danifb.travel_rag.integration.openai;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

@@ -1,65 +1,54 @@
 package com.danifb.travel_rag.service;
 
+import com.danifb.travel_rag.model.ChunkSource;
 import com.danifb.travel_rag.repo.ChunkRepository;
+import com.danifb.travel_rag.integration.openai.OpenAiClient;
+import com.danifb.travel_rag.repo.util.VectorUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class RagService {
 
     private final OpenAiClient openAiClient;
     private final ChunkRepository chunkRepository;
+    private final PromptBuilder promptBuilder;
 
-    public RagService(OpenAiClient openAiClient, ChunkRepository chunkRepository) {
+    public RagService(OpenAiClient openAiClient,
+                      ChunkRepository chunkRepository,
+                      PromptBuilder promptBuilder) {
         this.openAiClient = openAiClient;
         this.chunkRepository = chunkRepository;
+        this.promptBuilder = promptBuilder;
     }
 
-    public String answer(String userQuestion) throws Exception {
+    public AskResult ask(List<UUID> documentIds, String question) {
+        List<Double> qEmbedding = openAiClient.embed(question);
+        String qVector = VectorUtils.toVectorLiteral(qEmbedding);
 
-        System.out.println("Question: " + userQuestion);
+        List<ChunkSource> sources = chunkRepository.findSimilarSourcesForDocuments(documentIds, qVector, 5);
 
-        List<Double> questionEmbedding = openAiClient.embed(userQuestion);
-        String questionVector = toVectorLiteral(questionEmbedding);
+        // Prompt uses only the chunk text
+        List<String> chunkTexts = sources.stream().map(ChunkSource::getContent).toList();
+        String prompt = promptBuilder.buildFlightRagPrompt(question, chunkTexts);
 
-        List<String> relevantChunks = chunkRepository.findSimilarChunks(questionVector, 3);
-        System.out.println("Relevant chunks found: " + relevantChunks.size());
+        String answer = openAiClient.generate(prompt);
 
-        StringBuilder context = new StringBuilder();
-        for (int i = 0; i < relevantChunks.size(); i++) {
-            context.append("--- Fragment ").append(i + 1).append(" ---\n");
-            context.append(relevantChunks.get(i)).append("\n\n");
-        }
-
-        String prompt = """
-        You are an assistant specialized in flight search.
-        Answer the user's question using ONLY the information
-        provided in the following context.
-        If the information is not in the context, state it clearly.
-        
-        CONTEXT:
-        %s
-        
-        USER QUESTION:
-        %s
-        
-        ANSWER:
-        """.formatted(context.toString(), userQuestion);
-
-        String response = openAiClient.chat(prompt);
-        System.out.println("Response generated successfully");
-
-        return response;
+        return new AskResult(answer, sources);
     }
 
-    private String toVectorLiteral(List<Double> vec) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < vec.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append(vec.get(i));
+    public static class AskResult {
+        private String answer;
+        private List<ChunkSource> sources;
+
+        public AskResult(String answer, List<ChunkSource> sources) {
+            this.answer = answer;
+            this.sources = sources;
         }
-        sb.append("]");
-        return sb.toString();
+
+        public String getAnswer() { return answer; }
+        public List<ChunkSource> getSources() { return sources; }
     }
 }

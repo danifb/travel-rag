@@ -1,9 +1,8 @@
 package com.danifb.travel_rag;
 
-import com.danifb.travel_rag.config.OpenAiProperties;
+import com.danifb.travel_rag.integration.openai.OpenAiProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
